@@ -1,10 +1,10 @@
 import { router, Stack } from "expo-router";
-import { Button, Text, Image, StyleSheet, View } from "react-native";
+import { View, Text, StyleSheet, Button } from "react-native";
 
-export default function Home() {
+export default function Tab() {
   return (
     <View style={styles.container}>
-      <Text>Home Page</Text>
+      <Text>Tab [My Profile]</Text>
       <>
         <Stack.Screen />
       </>
