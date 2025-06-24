@@ -1,6 +1,7 @@
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { MaterialIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { router, Tabs } from "expo-router";
-import { Button } from "react-native";
+import { Pressable } from "react-native";
 
 export default function TabLayout() {
   function handleLogout() {
@@ -10,15 +11,26 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerRight: () => <Button title="Logout" onPress={handleLogout} />,
+        headerTitleAlign: "left",
+        tabBarActiveTintColor: "#1DD2AF",
+        tabBarInactiveTintColor: "#999",
+        headerRight: () => (
+          <Pressable onPress={handleLogout} style={{ marginRight: 16 }}>
+            <MaterialIcons name="logout" size={24} color="#1DD2AF" />
+          </Pressable>
+        ),
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome size={28} name="home" color={color} />
+          title: "Home Feed",
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons
+              name={focused ? "home" : "home-outline"}
+              size={28}
+              color={color}
+            />
           ),
         }}
       />
@@ -27,7 +39,7 @@ export default function TabLayout() {
         options={{
           title: "Search",
           tabBarIcon: ({ color }) => (
-            <FontAwesome size={24} name="search" color={color} />
+            <Ionicons size={24} name="search" color={color} />
           ),
         }}
       />
@@ -36,7 +48,7 @@ export default function TabLayout() {
         options={{
           title: "Add Post",
           tabBarIcon: ({ color }) => (
-            <FontAwesome size={24} name="plus-square" color={color} />
+            <MaterialIcons size={24} name="add" color={color} />
           ),
         }}
       />
@@ -44,8 +56,12 @@ export default function TabLayout() {
         name="favorites"
         options={{
           title: "Favorites",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome size={24} name="heart" color={color} />
+          tabBarIcon: ({ focused, color }) => (
+            <MaterialIcons
+              size={24}
+              name={focused ? "favorite" : "favorite-outline"}
+              color={color}
+            />
           ),
         }}
       />
@@ -53,8 +69,12 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome size={24} name="user" color={color} />
+          tabBarIcon: ({ focused, color }) => (
+            <MaterialIcons
+              size={24}
+              name={focused ? "person" : "person-outline"}
+              color={color}
+            />
           ),
         }}
       />
