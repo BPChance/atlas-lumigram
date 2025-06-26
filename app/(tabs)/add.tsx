@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   imagePicker: {
     width: "90%",
     height: 300,
-    backgroundColor: "black",
+    backgroundColor: "grey",
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 24,
