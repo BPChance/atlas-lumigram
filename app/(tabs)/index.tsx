@@ -67,13 +67,13 @@ function PostItem({
 
 const styles = StyleSheet.create({
   post: {
-    marginBottom: 16,
+    marginBottom: 8,
     alignItems: "center",
   },
   imageContainer: {
     position: "relative",
-    width: width - 24,
-    height: 400,
+    width: width,
+    height: width,
   },
   image: {
     width: "100%",
