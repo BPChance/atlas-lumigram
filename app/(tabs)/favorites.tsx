@@ -1,23 +1,21 @@
-import React, { useState } from "react";
+import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import { View, Text, Image, Alert, StyleSheet, Dimensions } from "react-native";
 import { FlashList } from "@shopify/flash-list";
-import {
-  TapGestureHandler,
-  LongPressGestureHandler,
-  State,
-} from "react-native-gesture-handler";
 import { favoritesFeed } from "@/placeholder";
+import { useState } from "react";
 const { width } = Dimensions.get("window");
 
-export default function Favorites() {
+export default function HomeFeed() {
+  const renderItem = ({ item }: { item: (typeof favoritesFeed)[0] }) => (
+    <PostItem image={item.image} caption={item.caption} id={item.id} />
+  );
+
   return (
     <FlashList
       data={favoritesFeed}
+      renderItem={renderItem}
       keyExtractor={(item) => item.id}
       estimatedItemSize={50}
-      renderItem={({ item }) => (
-        <PostItem image={item.image} caption={item.caption} id={item.id} />
-      )}
     />
   );
 }
@@ -33,36 +31,33 @@ function PostItem({
 }) {
   const [showCaption, setShowCaption] = useState(false);
 
-  const handleLongPress = (state: any) => {
-    if (state.nativeEvent.state === State.ACTIVE) {
-      setShowCaption(true);
-    } else if (state.nativeEvent.state === State.END) {
-      setShowCaption(false);
-    }
-  };
+  const doubleTap = Gesture.Tap()
+    .numberOfTaps(2)
+    .onEnd(() => {
+      Alert.alert("Double tap");
+    })
+    .runOnJS(true);
 
-  const handleDoubleTap = () => {
-    Alert.alert("Double tapped");
-  };
+  const longPress = Gesture.LongPress()
+    .onStart(() => setShowCaption(true))
+    .onEnd(() => setShowCaption(false))
+    .runOnJS(true);
+
+  const gesture = Gesture.Simultaneous(doubleTap, longPress);
 
   return (
-    <LongPressGestureHandler
-      onHandlerStateChange={handleLongPress}
-      minDurationMs={500}
-    >
-      <TapGestureHandler numberOfTaps={2} onActivated={handleDoubleTap}>
-        <View style={styles.post}>
-          <View style={styles.imageContainer}>
-            <Image source={{ uri: image }} style={styles.image} />
-            {showCaption && (
-              <View style={styles.captionContainer}>
-                <Text style={styles.caption}>{caption}</Text>
-              </View>
-            )}
-          </View>
+    <GestureDetector gesture={gesture}>
+      <View style={styles.post}>
+        <View style={styles.imageContainer}>
+          <Image source={{ uri: image }} style={styles.image} />
+          {showCaption && (
+            <View style={styles.captionContainer}>
+              <Text style={styles.caption}>{caption}</Text>
+            </View>
+          )}
         </View>
-      </TapGestureHandler>
-    </LongPressGestureHandler>
+      </View>
+    </GestureDetector>
   );
 }
 
@@ -78,9 +73,14 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "100%",
-    height: "100%",
+    height: 400,
     resizeMode: "cover",
     borderRadius: 16,
+  },
+  caption: {
+    color: "#fff",
+    fontSize: 16,
+    textAlign: "center",
   },
   captionContainer: {
     position: "absolute",
@@ -90,10 +90,5 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.6)",
     padding: 8,
     borderRadius: 6,
-  },
-  caption: {
-    color: "#fff",
-    fontSize: 16,
-    textAlign: "center",
   },
 });
