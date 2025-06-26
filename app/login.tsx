@@ -1,6 +1,5 @@
 import {
   View,
-  Button,
   Text,
   StyleSheet,
   TextInput,
