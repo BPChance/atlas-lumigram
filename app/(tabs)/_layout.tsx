@@ -1,10 +1,14 @@
+import { auth } from "@/firebaseConfig";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
 import { router, Tabs } from "expo-router";
 import { Pressable } from "react-native";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function TabLayout() {
-  function handleLogout() {
+  const { logout } = useAuth();
+  async function handleLogout() {
+    await logout();
     router.replace("/login");
   }
 
