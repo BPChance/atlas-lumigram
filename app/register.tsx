@@ -8,8 +8,28 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import Logo from "../assets/images/logo.png";
+import { useAuth } from "@/components/AuthProvider";
+import { useState } from "react";
 
 export default function Register() {
+  const { register } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleRegister = async () => {
+    if (password.length < 6) {
+      alert("Password must be at least 6 characters");
+      return;
+    }
+
+    try {
+      await register(email, password);
+      router.replace("/(tabs)");
+    } catch (err) {
+      alert("Unable to create account");
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Image source={Logo} style={styles.logo} resizeMode="contain"></Image>
@@ -19,17 +39,18 @@ export default function Register() {
         placeholderTextColor="white"
         autoCapitalize="none"
         style={styles.input}
+        value={email}
+        onChangeText={setEmail}
       ></TextInput>
       <TextInput
         placeholder="Password"
         placeholderTextColor="white"
         autoCapitalize="none"
         style={styles.input}
+        value={password}
+        onChangeText={setPassword}
       ></TextInput>
-      <Pressable
-        style={styles.button}
-        onPress={() => router.replace("/(tabs)")}
-      >
+      <Pressable style={styles.button} onPress={handleRegister}>
         <Text style={styles.buttonText}>Create Account</Text>
       </Pressable>
       <Text style={styles.link} onPress={() => router.back()}>
@@ -65,6 +86,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 4,
     marginBottom: 8,
+    color: "white",
   },
   link: {
     marginTop: 6,
