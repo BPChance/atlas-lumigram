@@ -1,10 +1,12 @@
+import { useAuth } from "@/components/AuthProvider";
 import { router, Stack } from "expo-router";
 import { View, Text, StyleSheet, Button } from "react-native";
 
 export default function Tab() {
+  const { user } = useAuth();
   return (
     <View style={styles.container}>
-      <Text>Tab [My Profile]</Text>
+      <Text>{user?.email}</Text>
       <>
         <Stack.Screen />
       </>
