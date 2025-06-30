@@ -7,40 +7,51 @@ import {
   Image,
   Pressable,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
+import {
+  launchImageLibraryAsync,
+  requestCameraPermissionsAsync,
+  MediaType,
+  MediaTypeOptions,
+} from "expo-image-picker";
+import storage from "@/lib/storage";
+import firestore from "@/lib/firestore";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function AddPost() {
+  const auth = useAuth();
+  async function save() {
+    if (!image) return;
+    const name = image?.split("/").pop() as string;
+    const { downloadUrl, metadata } = await storage.upload(image, name);
+    console.log(downloadUrl);
+    firestore.addPost({
+      caption,
+      image: downloadUrl,
+      createdAt: new Date(),
+      createdBy: auth.user?.uid!!,
+    });
+    alert("Image added");
+  }
+
   const [image, setImage] = useState<string | null>(null);
   const [caption, setCaption] = useState("");
 
   const pickImage = async () => {
-    const permissionResult =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const permissionResult = await requestCameraPermissionsAsync();
 
     if (!permissionResult.granted) {
       alert("Permission to access camera roll is required");
       return;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    const result = await launchImageLibraryAsync({
+      mediaTypes: MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 1,
     });
     if (!result.canceled) {
       setImage(result.assets[0].uri);
     }
-  };
-
-  const handleAddPost = () => {
-    if (!image) {
-      alert("Please select an image");
-      return;
-    }
-
-    console.log("Image:", image);
-    console.log("Caption:", caption);
-    alert("Post added");
   };
 
   return (
@@ -61,7 +72,7 @@ export default function AddPost() {
         onChangeText={setCaption}
       />
 
-      <Pressable style={styles.button} onPress={handleAddPost}>
+      <Pressable style={styles.button} onPress={save}>
         <Text style={styles.buttonText}>Save</Text>
       </Pressable>
       <Pressable style={styles.resetButton}>
