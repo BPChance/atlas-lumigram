@@ -7,56 +7,43 @@ import {
   Image,
   Pressable,
 } from "react-native";
-import {
-  launchImageLibraryAsync,
-  requestCameraPermissionsAsync,
-  MediaType,
-  MediaTypeOptions,
-} from "expo-image-picker";
 import storage from "@/lib/storage";
 import firestore from "@/lib/firestore";
 import { useAuth } from "@/components/AuthProvider";
+import { useImagePicker } from "@/hooks/useImagePicker";
 
 export default function AddPost() {
   const auth = useAuth();
-  async function save() {
-    if (!image) return;
-    const name = image?.split("/").pop() as string;
-    const { downloadUrl, metadata } = await storage.upload(image, name);
-    console.log(downloadUrl);
-    firestore.addPost({
-      caption,
-      image: downloadUrl,
-      createdAt: new Date(),
-      createdBy: auth.user?.uid!!,
-    });
-    alert("Image added");
-  }
-
-  const [image, setImage] = useState<string | null>(null);
   const [caption, setCaption] = useState("");
+  const { image, openImagePicker, reset } = useImagePicker();
 
-  const pickImage = async () => {
-    const permissionResult = await requestCameraPermissionsAsync();
-
-    if (!permissionResult.granted) {
-      alert("Permission to access camera roll is required");
+  async function save() {
+    console.log("save was called");
+    if (!image) {
+      console.log("no image");
       return;
     }
-
-    const result = await launchImageLibraryAsync({
-      mediaTypes: MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 1,
-    });
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
+    try {
+      const name = image?.split("/").pop() as string;
+      const { downloadUrl, metadata } = await storage.upload(image, name);
+      console.log(downloadUrl);
+      firestore.addPost({
+        caption,
+        image: downloadUrl,
+        createdAt: new Date(),
+        createdBy: auth.user?.uid!!,
+      });
+      alert("Image added");
+      setCaption("");
+      reset();
+    } catch (err) {
+      console.error(err);
     }
-  };
+  }
 
   return (
     <View style={styles.container}>
-      <Pressable style={styles.imagePicker} onPress={pickImage}>
+      <Pressable style={styles.imagePicker} onPress={openImagePicker}>
         {image ? (
           <Image source={{ uri: image }} style={styles.image} />
         ) : (
@@ -75,7 +62,7 @@ export default function AddPost() {
       <Pressable style={styles.button} onPress={save}>
         <Text style={styles.buttonText}>Save</Text>
       </Pressable>
-      <Pressable style={styles.resetButton}>
+      <Pressable style={styles.resetButton} onPress={reset}>
         <Text style={styles.resetButtonText}>Reset</Text>
       </Pressable>
     </View>
