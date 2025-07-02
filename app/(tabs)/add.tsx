@@ -32,6 +32,7 @@ export default function AddPost() {
         image: downloadUrl,
         createdAt: new Date(),
         createdBy: auth.user?.uid!!,
+        id: ""
       });
       alert("Image added");
       setCaption("");
