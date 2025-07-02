@@ -33,6 +33,20 @@ export default function HomeFeed() {
     }
   }
 
+  async function loadMorePosts() {
+    if (!lastDoc) return;
+
+    try {
+      const { posts: morePosts, lastDoc: newlastDoc } = await firestore.getPost(
+        lastDoc
+      );
+      setPosts((prev) => [...prev, ...morePosts]);
+      setLastDoc(newlastDoc);
+    } catch (err) {
+      console.error("Error loading posts:", err);
+    }
+  }
+
   async function handleRefresh() {
     setRefreshing(true);
     try {
@@ -54,6 +68,8 @@ export default function HomeFeed() {
       estimatedItemSize={50}
       refreshing={refreshing}
       onRefresh={handleRefresh}
+      onEndReached={loadMorePosts}
+      onEndReachedThreshold={0.5}
     />
   );
 }
