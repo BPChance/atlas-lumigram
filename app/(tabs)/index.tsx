@@ -2,20 +2,58 @@ import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import { View, Text, Image, Alert, StyleSheet, Dimensions } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { homeFeed } from "@/placeholder";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { DocumentSnapshot } from "firebase/firestore";
+import firestore, { Post } from "@/lib/firestore";
 const { width } = Dimensions.get("window");
 
 export default function HomeFeed() {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastDoc, setLastDoc] = useState<DocumentSnapshot | null>(null);
   const renderItem = ({ item }: { item: (typeof homeFeed)[0] }) => (
     <PostItem image={item.image} caption={item.caption} id={item.id} />
   );
 
+  useEffect(() => {
+    loadInitialPosts();
+  }, []);
+
+  async function loadInitialPosts() {
+    setLoading(true);
+    try {
+      const { posts: newPosts, lastDoc } = await firestore.getPost();
+      setPosts(newPosts);
+      setLastDoc(lastDoc);
+    } catch (err) {
+      console.error("Error loading posts:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    try {
+      const { posts: newPosts, lastDoc } = await firestore.getPost();
+      setPosts(newPosts);
+      setLastDoc(lastDoc);
+    } catch (err) {
+      console.error("Error refreshing posts:", err);
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
   return (
     <FlashList
-      data={homeFeed}
+      data={posts}
       renderItem={renderItem}
       keyExtractor={(item) => item.id}
       estimatedItemSize={50}
+      refreshing={refreshing}
+      onRefresh={handleRefresh}
     />
   );
 }
