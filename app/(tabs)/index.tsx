@@ -4,7 +4,8 @@ import { FlashList } from "@shopify/flash-list";
 import { homeFeed } from "@/placeholder";
 import { useEffect, useState } from "react";
 import { DocumentSnapshot } from "firebase/firestore";
-import firestore, { Post } from "@/lib/firestore";
+import firestore, { addFavorite, Post } from "@/lib/firestore";
+import { useAuth } from "@/components/AuthProvider";
 const { width } = Dimensions.get("window");
 
 export default function HomeFeed() {
@@ -84,11 +85,19 @@ function PostItem({
   id: string;
 }) {
   const [showCaption, setShowCaption] = useState(false);
+  const { user } = useAuth();
 
   const doubleTap = Gesture.Tap()
     .numberOfTaps(2)
-    .onEnd(() => {
-      Alert.alert("Double tap");
+    .onEnd(async () => {
+      if (user?.uid) {
+        try {
+          await firestore.addFavorite(id, user.uid);
+          Alert.alert("Favorited");
+        } catch (err) {
+          console.error("Error adding to favorites:", err);
+        }
+      }
     })
     .runOnJS(true);
 

@@ -1,21 +1,80 @@
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import { View, Text, Image, Alert, StyleSheet, Dimensions } from "react-native";
 import { FlashList } from "@shopify/flash-list";
-import { favoritesFeed } from "@/placeholder";
-import { useState } from "react";
+import { homeFeed } from "@/placeholder";
+import { useEffect, useState } from "react";
+import { DocumentSnapshot } from "firebase/firestore";
+import firestore, { addFavorite, Post } from "@/lib/firestore";
+import { useAuth } from "@/components/AuthProvider";
 const { width } = Dimensions.get("window");
 
-export default function HomeFeed() {
-  const renderItem = ({ item }: { item: (typeof favoritesFeed)[0] }) => (
+export default function Favorites() {
+  const { user } = useAuth();
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastDoc, setLastDoc] = useState<DocumentSnapshot | null>(null);
+  const renderItem = ({ item }: { item: (typeof homeFeed)[0] }) => (
     <PostItem image={item.image} caption={item.caption} id={item.id} />
   );
 
+  useEffect(() => {
+    loadInitialPosts();
+  }, []);
+
+  async function loadInitialPosts() {
+    setLoading(true);
+    try {
+      const { posts: newPosts, lastDoc } = await firestore.getFavorite(
+        user?.uid!
+      );
+      setPosts(newPosts);
+      setLastDoc(lastDoc);
+    } catch (err) {
+      console.error("Error loading posts:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadMorePosts() {
+    if (!lastDoc) return;
+
+    try {
+      const { posts: morePosts, lastDoc: newlastDoc } =
+        await firestore.getFavorite(user?.uid!, lastDoc);
+      setPosts((prev) => [...prev, ...morePosts]);
+      setLastDoc(newlastDoc);
+    } catch (err) {
+      console.error("Error loading posts:", err);
+    }
+  }
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    try {
+      const { posts: newPosts, lastDoc } = await firestore.getFavorite(
+        user?.uid!
+      );
+      setPosts(newPosts);
+      setLastDoc(lastDoc);
+    } catch (err) {
+      console.error("Error refreshing posts:", err);
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
   return (
     <FlashList
-      data={favoritesFeed}
+      data={posts}
       renderItem={renderItem}
-      keyExtractor={(item) => item.id}
+      keyExtractor={(item, index) => `${item.id}-${index}`}
       estimatedItemSize={50}
+      refreshing={refreshing}
+      onRefresh={handleRefresh}
+      onEndReached={loadMorePosts}
+      onEndReachedThreshold={0.5}
     />
   );
 }
@@ -30,11 +89,19 @@ function PostItem({
   id: string;
 }) {
   const [showCaption, setShowCaption] = useState(false);
+  const { user } = useAuth();
 
   const doubleTap = Gesture.Tap()
     .numberOfTaps(2)
-    .onEnd(() => {
-      Alert.alert("Double tap");
+    .onEnd(async () => {
+      if (user?.uid) {
+        try {
+          await firestore.addFavorite(id, user.uid);
+          Alert.alert("Favorited");
+        } catch (err) {
+          console.error("Error adding to favorites:", err);
+        }
+      }
     })
     .runOnJS(true);
 
